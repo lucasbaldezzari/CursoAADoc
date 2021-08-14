@@ -1,0 +1,1 @@
+{"fs": 360, "sig_len": 650000, "n_sig": 1, "base_date": null, "base_time": null, "units": ["mV"], "sig_name": ["MLII"], "comments": ["69 M 1085 1629 x1", "Aldomet, Inderal"]}

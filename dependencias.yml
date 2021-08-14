@@ -1,0 +1,12 @@
+name: AADoc
+channels:
+- defaults
+dependencies:
+- python>=3.7
+- matplotlib
+- pip
+- pip:
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
