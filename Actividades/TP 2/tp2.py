@@ -198,7 +198,7 @@ print(modelo.get_params())
 
 from sklearn.neighbors import KNeighborsClassifier
 
-
+#Declaro algunos hiperparametros para utilizar posteriormente
 hiperParams = {"algorithms": ["ball_tree", "kd_tree"],
                "metrics": ["euclidean","chebyshev","minkowski","manhattan"],
                "weights": ["uniform","distance"]}
@@ -220,8 +220,8 @@ kd_treeResults = np.zeros((len(hiperParams["metrics"]), len(hiperParams["weights
 # accuForNeighNum = {"5": dict(), "6": dict(), "7": dict(), "8": dict(),
                    # "9": dict(), "10": dict(), "11": dict(), "12": dict()}
 
-neighborsNum = list()
-accuForNeighNum = list()
+neighborsNum = list() #Utilizaré esta lista para almacenar los clasificadoresKnn
+accuForNeighNum = list() #Para almacenar los accuracies
 
 for n_neighbors in np.arange(5,11):#neighborsNum.keys():
     
@@ -248,7 +248,7 @@ for n_neighbors in np.arange(5,11):#neighborsNum.keys():
                 if algorithm == "kd_tree":
                     kd_treeResults[j,k] = accu
                 
-                clasificadoresKnn[algorithm].append((weight, metric,model))
+                clasificadoresKnn[algorithm].append((weight, metric,model,accu))
 
     # neighborsNum[n_neighbors] = clasificadoresKnn
     # accuForNeighNum[n_neighbors] = {"accu_ball_tree": ball_treeResults,
@@ -280,6 +280,7 @@ for i in range(accuForNeighNum[0]["accu_ball_tree"].shape[0]):
                  va='center', ha='center')
         
 save = True
+
 if save:
     pathACtual = os.getcwd()
     newPath = os.path.join(pathACtual, "figs")
@@ -347,21 +348,111 @@ if save:
 
 plt.show()
     
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
 
-n = 100
+# n = 100
 
 # For each set of style and range settings, plot n random points in the box
 # defined by x in [23, 32], y in [0, 100], z in [zlow, zhigh].
-for m, zlow, zhigh in [('o', -50, -25), ('^', -30, -5)]:
-    xs = X[:,1]
-    ys = X[:,31]
-    zs = X[:,41]
-    ax.scatter(xs, ys, zs, marker=m)
+# for m, zlow, zhigh in [('o', -50, -25), ('^', -30, -5)]:
+#     xs = X[:,1]
+#     ys = X[:,31]
+#     zs = X[:,41]
+#     ax.scatter(xs, ys, zs, marker=m)
 
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
+# ax.set_xlabel('X Label')
+# ax.set_ylabel('Y Label')
+# ax.set_zlabel('Z Label')
 
-plt.show()
+# plt.show()
+
+"""
+Comparando clasificadores
+"""
+# TQDM muestra una barra de avance a medida que pasan las iteraciones 
+from tqdm import tqdm
+
+# Vamos a analizar varias métricas
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
+
+#Selecciono dos clasificadores SVM
+modeloSVM1 = clasificadoresSVM["linear"][3][1] #modelo 3 con [Model = SVC(C=100.0, kernel='linear'), accu = 0.811]
+
+gamma = 0.8
+C = "scale"
+
+for values in clasificadoresSVM["rbf"]:
+    if values[0] == gamma and values[1] == C:
+        modeloSVM2 = values[2] #modelo 2 es un SVM con kernel = rbf
+
+#Selecciono dos clasificadores KNN
+#Modelo KNN 1
+n_neighbors = 9
+algorithms = "ball_tree"
+metric = "euclidean"
+weight = "distance"
+
+neighborsNum[n_neighbors-5][algorithms]
+
+for values in neighborsNum[n_neighbors-5][algorithms]:
+    if values[0] == weight and values[1] == metric:
+        modeloKNN1 = values[2]
+    
+#Modelo KNN 2
+n_neighbors = 9
+algorithms = "kd_tree"
+metric = "minkowski"
+weight = "distance"
+
+neighborsNum[n_neighbors-5][algorithms]
+
+for values in neighborsNum[n_neighbors-5][algorithms]:
+    if values[0] == weight and values[1] == metric:
+        modeloKNN2 = values[2]
+
+#Lista modelos
+# modelos = [modeloSVM1, modeloSVM2, modeloKNN1, modeloKNN2]
+
+modelos = {"SVM1": modeloSVM1,
+           "SVM2": modeloSVM2,
+           "KNN1": modeloKNN1,
+           "KNN2": modeloKNN2}
+
+generalResults = []
+
+for train_ind, test_ind in tqdm(particiones): 
+    for modelo in modelos: # TODO completar con todos los modelos a usar
+            
+        # if nombre_modelo == "modelo_1":
+        #     # TODO: instanciar el modelo con los hiperparámetros que dieron mejor en el análisis previo
+        #     modelo = # ...
+        # if nombre_modelo == "modelo_2":
+        #     # TODO: instanciar el modelo con los hiperparámetros que dieron mejor en el análisis previo
+        #     modelo = # ...
+
+        # # notar que ahora X[train_ind, :] contiene a Xtrain y Xoptim del punto 
+        # # anterior
+        modelos[modelo].fit(X[train_ind, :], y[train_ind])
+
+        # La siguietne predicción se hace sobre datos que no fueron vistos antes
+        pred = modelos[modelo].predict(X[test_ind, :])
+
+        generalResults.append([modelo,
+                               accuracy_score(y[test_ind], pred),
+                               f1_score(y[test_ind], pred),
+                               recall_score(y[test_ind], pred),
+                               precision_score(y[test_ind], pred)])
+
+generalResults = pd.DataFrame(generalResults, columns=["modelo", "acc", "f1", "pre", "rec"])
+generalResults
+
+import seaborn
+
+fig, ax = plt.subplots(1, 4, figsize=(25, 10),
+                       gridspec_kw = dict(hspace=0.1, wspace=0.2))
+
+for k, metric in enumerate(["acc", "pre", "rec", "f1"]):
+    seaborn.boxplot(data=generalResults, y=metric, x="modelo", ax=ax[k])
+    ax[k].set_ylim([0, 1])
+plt.tight_layout()
