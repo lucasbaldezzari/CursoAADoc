@@ -21,6 +21,7 @@ archivo del link y guardarlo en la misma carpeta donde se encuentra la notebook
 import pandas as pd 
 import numpy as np 
 from matplotlib import pyplot as plt 
+import os
 
 
 
@@ -90,7 +91,8 @@ train_ind, _ = particiones[0] # notar que "test_ind" es "_" porque no lo vamos a
 Xtrain, Xoptim, ytrain, yoptim = train_test_split(X[train_ind, :], y[train_ind],
                                                   test_size=.2, stratify=y[train_ind])
 
-print("Datos de entrenamiento", Xtrain.shape, "| datos de optimización:", Xoptim.shape)
+print("Datos de entrenamiento", Xtrain.shape,
+      "| datos de optimización:", Xoptim.shape)
 print(f"Entrenamiento: {len(ytrain)} ({np.sum(ytrain==1)} positivos)")
 print(f"Optimización: {len(yoptim)} ({np.sum(yoptim==1)} positivos)")
 
@@ -119,11 +121,10 @@ https://scikit-learn.org/stable/auto_examples/svm/plot_rbf_parameters.html
 """
 
 hiperParams = {"kernels": ["linear", "rbf"],
-    "gammaValues": [1e-2, 1e-1, 1, 1e+1, 1e+2, "scale", "auto"],
-    "CValues": [8e-1,9e-1, 1, 1e2, 1e3]
-    }
+               "gammaValues": [1e-2, 1e-1, 1, 1e+1, 1e+2, "scale", "auto"],
+               "CValues": [8e-1,9e-1, 1, 1e2, 1e3]}
 
-clasificadores = {"linear": list(),
+clasificadoresSVM = {"linear": list(),
                   "rbf": list()
     }
 
@@ -148,12 +149,12 @@ for i, kernel in enumerate(hiperParams["kernels"]):
                 
                 rbfResults[j,k] = accu
                 
-                clasificadores[kernel].append((C, gamma, model, accu))
+                clasificadoresSVM[kernel].append((C, gamma, model, accu))
     else:
         for k, C in enumerate(hiperParams["CValues"]):
             
             #Instanciamos el modelo para los hipermarametros
-            model = SVC(C = C, kernel = kernel, gamma = gamma)
+            model = SVC(C = C, kernel = kernel)
             #entreno el modelo
             model.fit(Xtrain, ytrain)
             pred = model.predict(Xoptim)
@@ -161,7 +162,7 @@ for i, kernel in enumerate(hiperParams["kernels"]):
             linearResults.append(accu)
             #predecimos con los datos en Xoptim
             
-            clasificadores[kernel].append((C, model, accu))
+            clasificadoresSVM[kernel].append((C, model, accu))
             
 plt.figure(figsize=(15,10))
 plt.imshow(rbfResults)
@@ -181,4 +182,186 @@ plt.plot([str(C) for C in hiperParams["CValues"]], np.asarray(linearResults)*100
 plt.title("Accuracy para predicciones usando kernel 'linear'")
 plt.xlabel("Valor de C") 
 plt.ylabel("Accuracy (%)")
+plt.show()
+
+"""
+Probando un Knn
+https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
+
+- Hiperparametros del modelo Knn
+
+print(modelo.get_params())
+
+{'algorithm': 'auto', 'leaf_size': 30, 'metric': 'minkowski', 'metric_params': None,
+ 'n_jobs': None, 'n_neighbors': 5, 'p': 2, 'weights': 'uniform'}
+"""
+
+from sklearn.neighbors import KNeighborsClassifier
+
+
+hiperParams = {"algorithms": ["ball_tree", "kd_tree"],
+               "metrics": ["euclidean","chebyshev","minkowski","manhattan"],
+               "weights": ["uniform","distance"]}
+
+# hiperParams = {"algorithms": ["ball_tree"],
+#                "metrics": ["euclidean"],
+#                "weights": ["uniform"]}
+
+clasificadoresKnn = {"ball_tree": list(),
+                     "kd_tree": list()}
+
+# neighborsNum = {"5": dict(), "6": dict(), "7": dict(), "8": dict(),
+                # "9": dict(), "10": dict(), "11": dict(), "12": dict()}
+
+ball_treeResults = np.zeros((len(hiperParams["metrics"]), len(hiperParams["weights"])))
+kd_treeResults = np.zeros((len(hiperParams["metrics"]), len(hiperParams["weights"])))
+
+
+# accuForNeighNum = {"5": dict(), "6": dict(), "7": dict(), "8": dict(),
+                   # "9": dict(), "10": dict(), "11": dict(), "12": dict()}
+
+neighborsNum = list()
+accuForNeighNum = list()
+
+for n_neighbors in np.arange(5,11):#neighborsNum.keys():
+    
+    for i, algorithm in enumerate(hiperParams["algorithms"]):
+        
+        for j, metric in enumerate(hiperParams["metrics"]):
+            
+            for k, weight in enumerate(hiperParams["weights"]):
+                #Instanciamos el modelo para los hipermarametros
+                model = KNeighborsClassifier(n_neighbors = int(n_neighbors),
+                                             weights = weight,
+                                             algorithm = algorithm,
+                                             metric = metric)
+                #entreno el modelo
+                model.fit(Xtrain, ytrain)
+                
+                #predecimos con los datos en Xoptim
+                pred = model.predict(Xoptim)
+                accu = f1_score(yoptim, pred)
+                
+                if algorithm == "ball_tree":
+                    ball_treeResults[j,k] = accu
+                    
+                if algorithm == "kd_tree":
+                    kd_treeResults[j,k] = accu
+                
+                clasificadoresKnn[algorithm].append((weight, metric,model))
+
+    # neighborsNum[n_neighbors] = clasificadoresKnn
+    # accuForNeighNum[n_neighbors] = {"accu_ball_tree": ball_treeResults,
+    #                                 "accu_kd_tree": kd_treeResults}
+    
+    neighborsNum.append(clasificadoresKnn)
+    accuForNeighNum.append({"accu_ball_tree": ball_treeResults,
+                            "accu_kd_tree": kd_treeResults})
+    
+    ball_treeResults = np.zeros((len(hiperParams["metrics"]), len(hiperParams["weights"])))
+    kd_treeResults = np.zeros((len(hiperParams["metrics"]), len(hiperParams["weights"])))
+    clasificadoresKnn = {"ball_tree": list(),
+                     "kd_tree": list()}
+    
+title = "Accuracies - knn = 5 - accu_ball_tree"
+
+plt.figure(figsize=(15,10))
+plt.title(title)
+plt.imshow(accuForNeighNum[0]["accu_ball_tree"], cmap = "Greens_r")
+plt.xlabel("Weights")
+plt.xticks(np.arange(len(hiperParams["weights"])), hiperParams["weights"])
+plt.ylabel("Metric")
+plt.yticks(np.arange(len(hiperParams["metrics"])), hiperParams["metrics"])
+plt.colorbar();
+
+for i in range(accuForNeighNum[0]["accu_ball_tree"].shape[0]):
+    for j in range(accuForNeighNum[0]["accu_ball_tree"].shape[1]):
+        plt.text(j, i, "{:.2f}".format(accuForNeighNum[0]["accu_ball_tree"][i, j]),
+                 va='center', ha='center')
+        
+save = True
+if save:
+    pathACtual = os.getcwd()
+    newPath = os.path.join(pathACtual, "figs")
+    os.chdir(newPath)
+    plt.savefig(title, dpi = 200)
+    os.chdir(pathACtual)
+    
+plt.show()
+
+fig, axes = plt.subplots(2, 6, figsize=(20, 15),
+                         gridspec_kw = dict(hspace=0.1, wspace=0.2))
+title = "Accuracies totales - accu_ball_tree (en verde) - accu_kd_tree (en azul)"
+
+fig.suptitle(title, fontsize=28)
+
+axes = axes.reshape(-1)
+    
+for n_neighbors in np.arange(0,6):
+    axes[n_neighbors].set_xlabel('Weights') 
+    axes[n_neighbors+6].set_xlabel('Weights')
+    if n_neighbors == 0:
+        axes[n_neighbors].set_ylabel('Metrics')
+        axes[n_neighbors+6].set_ylabel('Metrics')
+    
+    axes[n_neighbors].set_title(f"Accuracies\n knn = {n_neighbors+5}\n accu_ball_tree")
+    axes[n_neighbors+6].set_title(f"Accuracies\n knn = {n_neighbors+5}\n accu_kd_tree")
+    
+    axes[n_neighbors].imshow(accuForNeighNum[0]["accu_ball_tree"], cmap = "Greens_r")
+    axes[n_neighbors+6].imshow(accuForNeighNum[0]["accu_kd_tree"], cmap = "Blues_r")
+
+    axes[n_neighbors].set_xticks(np.arange(len(hiperParams["weights"])))
+    axes[n_neighbors+6].set_xticks(np.arange(len(hiperParams["weights"])))
+    
+    axes[n_neighbors].set_xticklabels(hiperParams["weights"])
+    axes[n_neighbors+6].set_xticklabels(hiperParams["weights"])
+    
+    if n_neighbors == 0:
+        axes[n_neighbors].set_yticks(np.arange(len(hiperParams["metrics"])))
+        axes[n_neighbors].set_yticklabels(hiperParams["metrics"])
+        axes[n_neighbors+6].set_yticks(np.arange(len(hiperParams["metrics"])))
+        axes[n_neighbors+6].set_yticklabels(hiperParams["metrics"])
+    else:
+        axes[n_neighbors].yaxis.set_visible(False)
+        axes[n_neighbors+6].yaxis.set_visible(False)
+        
+    for i in range(accuForNeighNum[n_neighbors]["accu_ball_tree"].shape[0]):
+        for j in range(accuForNeighNum[n_neighbors]["accu_ball_tree"].shape[1]):
+            axes[n_neighbors].text(j, i, "{:.2f}".format(accuForNeighNum[n_neighbors]["accu_ball_tree"][i, j]),
+                     va='center', ha='center') 
+            
+    for i in range(accuForNeighNum[n_neighbors]["accu_kd_tree"].shape[0]):
+        for j in range(accuForNeighNum[n_neighbors]["accu_kd_tree"].shape[1]):
+            axes[n_neighbors+6].text(j, i, "{:.2f}".format(accuForNeighNum[n_neighbors]["accu_kd_tree"][i, j]),
+                     va='center', ha='center') 
+    # plt.colorbar()
+
+# plt.show()
+
+if save:
+    pathACtual = os.getcwd()
+    newPath = os.path.join(pathACtual, "figs")
+    os.chdir(newPath)
+    plt.savefig(title, dpi = 200)
+    os.chdir(pathACtual)
+
+plt.show()
+    
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+
+n = 100
+
+# For each set of style and range settings, plot n random points in the box
+# defined by x in [23, 32], y in [0, 100], z in [zlow, zhigh].
+for m, zlow, zhigh in [('o', -50, -25), ('^', -30, -5)]:
+    xs = X[:,1]
+    ys = X[:,31]
+    zs = X[:,41]
+    ax.scatter(xs, ys, zs, marker=m)
+
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
+
 plt.show()

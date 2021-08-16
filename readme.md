@@ -28,7 +28,7 @@ Agregando mi enviroment a Jupyter notebook
 - [x] conda install -c anaconda ipykernel
 
 Seteando directorio de trabajo
-- [x] jupyter notebook --notebook-dir E:\CursoMLDoctorado
+- [x] jupyter notebook --notebook-dir E:\CursoAADoc
 
 - [Info](https://towardsdatascience.com/get-your-conda-environment-to-show-in-jupyter-notebooks-the-easy-way-17010b76e874)
 
