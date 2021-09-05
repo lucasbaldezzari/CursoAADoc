@@ -10,3 +10,5 @@ dependencies:
   - pandas
   - scikit-learn
   - scipy
+  - seaborn
+  - pandas-profiling[notebook]

@@ -262,7 +262,8 @@ for n_neighbors in np.arange(5,11):#neighborsNum.keys():
     kd_treeResults = np.zeros((len(hiperParams["metrics"]), len(hiperParams["weights"])))
     clasificadoresKnn = {"ball_tree": list(),
                      "kd_tree": list()}
-    
+
+#Grafico los accuracies para un modelo
 title = "Accuracies - knn = 5 - accu_ball_tree"
 
 plt.figure(figsize=(15,10))
@@ -290,6 +291,7 @@ if save:
     
 plt.show()
 
+# Grafico accuraccies para todos los modelos entrenados
 fig, axes = plt.subplots(2, 6, figsize=(20, 15),
                          gridspec_kw = dict(hspace=0.1, wspace=0.2))
 title = "Accuracies totales - accu_ball_tree (en verde) - accu_kd_tree (en azul)"
@@ -335,9 +337,6 @@ for n_neighbors in np.arange(0,6):
         for j in range(accuForNeighNum[n_neighbors]["accu_kd_tree"].shape[1]):
             axes[n_neighbors+6].text(j, i, "{:.2f}".format(accuForNeighNum[n_neighbors]["accu_kd_tree"][i, j]),
                      va='center', ha='center') 
-    # plt.colorbar()
-
-# plt.show()
 
 if save:
     pathACtual = os.getcwd()

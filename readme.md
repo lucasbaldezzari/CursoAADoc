@@ -9,14 +9,14 @@ Pasos propuestos a seguir:
 - _Abrir la consola de Anaconda, de Windows o Linux._
 - _Ejecutar:_ conda install --name base nb_conda_kernels
 - _Moverse hasta el directorio donde se almacenará el trabajo_
-- _Ejecutar:_ conda env update --file dependencias.yml (Nota: el nombre por defecto del enviroment es "taller2-BCIC", para cambiarlo debe editarse el archivo dependencias.yml)
-- _Activar el ambiente:_ conda activate taller2-BCIC
+- _Ejecutar:_ conda env update --file dependencias.yml (Nota: el nombre por defecto del enviroment es "CursoAADoc", para cambiarlo debe editarse el archivo dependencias.yml)
+- _Activar el ambiente:_ conda activate CursoAADoc
 
 Al finalizar el proceso deberían ver un mensaje similar a este:
 
 _To activate this environment, use_
 
-     $ conda activate taller2-BCIC
+     $ conda activate CursoAADoc
 
 _To deactivate an active environment, use_
 
