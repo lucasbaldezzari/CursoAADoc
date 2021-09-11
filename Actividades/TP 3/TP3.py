@@ -175,7 +175,7 @@ model_full.fit(X_trn, y_trn)
 #predicciones modelo completo sobre datos de entrenamiento
 y_pred = model_full.predict(X_trn)
 
-# Cálculo de métricas
+# Cálculo de métricas para modelo completo
 precision, recall, f1,_ = precision_recall_fscore_support(y_trn, y_pred, average='macro')
 accuracy = accuracy_score(y_trn, y_pred)
 
