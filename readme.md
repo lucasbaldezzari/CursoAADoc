@@ -35,3 +35,8 @@ Seteando directorio de trabajo
 ### Guía Markdown
 
 - [The Ultimate Markdown Guide](https://medium.com/analytics-vidhya/the-ultimate-markdown-guide-for-jupyter-notebook-d5e5abf728fd)
+
+### Agregando kernel a Jupyter
+
+http://echrislynch.com/2019/02/01/adding-an-environment-to-jupyter-notebooks/
+https://medium.com/@nrk25693/how-to-add-your-conda-environment-to-your-jupyter-notebook-in-just-4-steps-abeab8b8d084
