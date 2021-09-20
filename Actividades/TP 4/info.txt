@@ -1,0 +1,4 @@
+https://rstudio-pubs-static.s3.amazonaws.com/358187_2157f6fed1e243d998c5cae2af2eca55.html
+
+https://becominghuman.ai/house-prices-advanced-regression-techniques-ad9341385712
+https://github.com/liyenhsu/Kaggle-House-Prices
