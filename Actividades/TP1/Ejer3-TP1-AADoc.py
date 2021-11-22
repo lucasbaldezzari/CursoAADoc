@@ -9,7 +9,7 @@ import os
 import numpy as np
 
 from downloadECG import loadParams
-from utils import pasaBanda, notch, plotECG, peakDetection, plotSeveralECG, splitECG
+from utils import pasaBanda, notch, plotECG, peakDetection, peakDetectionv2, plotSeveralECG, splitECG
 from Ejers1y2_TP1_AADoc import findingClusters
 
 #Load data
@@ -45,16 +45,16 @@ shortECG = filteredECG[int(iniTime*fm):int(finalTime*fm)]
 #         title = "ECG", savePlots = False, folder = "figs")
 
 std = np.std(filteredECG)
-threshold = 7*std #selecciono un umbral de 7 veces el std de la señal (¿por qué?, no hay por que :D )
+threshold = 7*std #selecciono un umbral de 7 veces el std de la señal
 #La selección del umbral fue realizada arbitrariamente.
 
-peaks, indexes, avg = peakDetection(shortECG, window = 1.0, threshold = threshold,
-                               fm = fm, startingIndex = int(iniTime*fm))   
+peaks, indexes, heartRate =  peakDetectionv2(shortECG, window = 1.0, threshold = threshold,
+                               fm = fm, startingIndex = int(iniTime*fm)) 
 
 #Plot the EEG with peak markers
 plotECG(shortECG, fm = 360., iniTime = iniTime, finalTime = finalTime,
-        markers = indexes, label = f"frecuencia {int(avg)}lpm",
-        title = "ECG con picos encontrados", savePlots = True, folder = "figs")   
+        markers = indexes, label = f"frecuencia {int(heartRate)}lpm",
+        title = "ECG con picos encontrados", savePlots = False, folder = "figs")   
 
 
 #Split the ECG data

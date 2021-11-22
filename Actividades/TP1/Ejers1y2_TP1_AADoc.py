@@ -57,7 +57,7 @@ def distance(X, centers):
     
     numCenters = centers.shape[0]
     copias = np.tile(X, (numCenters,1)) #copio cada punto en "num_data" veces para luego compararlo con cada centro
-    distance = np.sum(abs(copias - centers) ** (1/2), axis = 1) ** 2#(1 / 2)
+    distance = np.sum((copias - centers)**2, axis = 1)**1/2
     
     return distance
 
@@ -79,27 +79,24 @@ def findingClusters(dataset, kClusters = 2, centers = None):
         rand = np.random.RandomState()
         index = rand.permutation(dataset.shape[0])[:kClusters] #select kClusters centers randomly
         centers = dataset[index]
+        centers2 = dataset[index]
         
     while oldCostSum != costSum:
         
         oldCostSum = costSum
         costSum = 0
-        
+
         # step 2.1: assign data to closest center
-        for idata in range(dataset.shape[0]):
-            dist = distance(dataset[idata], centers) #calculo distancias a cada centro
-            labels[idata] = dist.argmin() #almaceno indice de la menor distancia
+        distances = np.apply_along_axis(distance, 1, dataset, centers)
+        labels = distances.argmin(axis = 1)
 
         # Step 2.2: Update the centers and cost function
         for ic in range(kClusters):
             cluster = dataset[labels == ic]
-            # find new center and minimize the cost for this cluster
-            cost = np.ones(cluster.shape[0])
-            for idata in range(cluster.shape[0]):
-                cost[idata] = np.sum(distance(cluster[idata], cluster)) #sumo up the distances
-                #between each data pair and the clusters (the centers)
-            centers[ic] = cluster[cost.argmin()] #select the minimun
-            costSum += cost.min()
+
+            cost2 = np.apply_along_axis(distance, 1, cluster, cluster).sum(axis=0)
+            centers[ic] = cluster[cost2.argmin()] #select the minimun
+            costSum += cost2.min()
        
     return centers, labels
 
@@ -110,19 +107,6 @@ def main():
     files = os.listdir(path) #leo los archivos dentro del path.
     
     os.chdir(initialFolder) #vuelvo al directorio de inicio
-    
-    
-    # rawData = pd.read_csv(f"{path}/{files[0]}") #cargo datos
-    
-    # heads = rawData.keys() #nombre de columnas
-    
-    # kGroups = rawData[heads[2]].nunique() #contabilizo la cantidad de grupos diferentes
-    # gruposOriginales = [f"Grupo {i}" for i in range(kGroups)]
-    
-    # # mediaGrupos = rawData.groupby([heads[2]]).mean()
-    
-    # values = np.asarray(rawData[[heads[0],heads[1]]])
-    # originalLabels = np.asarray(rawData[heads[2]])
     
     centers = np.array([])
     #grafico los datos originales
@@ -140,8 +124,8 @@ def main():
         originalLabels = np.asarray(rawData[heads[2]])
         title = f"Grupos originales - {file}"
         
-        plotScatter(values, centers, title = title, savePlots = False, folder = "figs",
-                    labels = originalLabels)
+        # plotScatter(values, centers, title = title, savePlots = False, folder = "figs",
+        #             labels = originalLabels)
     
     ks = [2]
     
